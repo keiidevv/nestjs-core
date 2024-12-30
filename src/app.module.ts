@@ -1,13 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { MovieModule } from './movie/movie.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'test' ? 'test.env' : '.env',
-    }),
-  ],
-  providers: [],
+  imports: [MovieModule],
 })
 export class AppModule {}
