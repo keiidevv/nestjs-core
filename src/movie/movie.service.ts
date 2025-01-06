@@ -1,45 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class MovieService {
-  private movies: Movie[] = [];
-  private idCounter = 3;
-
-  constructor() {
-    const movie1 = new Movie();
-    movie1.id = 1;
-    movie1.title = 'The Matrix';
-    movie1.genre = 'Action';
-
-    const movie2 = new Movie();
-    movie2.id = 2;
-    movie2.title = 'The Matrix Reloaded';
-    movie2.genre = 'Action';
-
-    this.movies.push(movie1);
-    this.movies.push(movie2);
-  }
+  constructor(
+    @InjectRepository(Movie)
+    private readonly movieRepository: Repository<Movie>,
+  ) {}
 
   create(createMovieDto: CreateMovieDto) {
-    return 'This action adds a new movie';
+    return this.movieRepository.save(createMovieDto);
   }
 
-  findAll() {
-    return `This action returns all movie`;
+  findAll(title?: string) {
+    return this.movieRepository.find({ where: { title } });
   }
 
   findOne(id: number) {
-    return `This action returns a #${id} movie`;
+    return this.movieRepository.findOne({ where: { id } });
   }
 
-  update(id: number, updateMovieDto: UpdateMovieDto) {
-    return `This action updates a #${id} movie`;
+  async update(id: number, updateMovieDto: UpdateMovieDto) {
+    const movie = await this.movieRepository.findOne({ where: { id } });
+    if (!movie) {
+      throw new NotFoundException('Movie not found');
+    }
+
+    await this.movieRepository.save({ ...movie, ...updateMovieDto });
+    return this.movieRepository.findOne({ where: { id } });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} movie`;
+  async remove(id: number) {
+    const movie = await this.movieRepository.findOne({ where: { id } });
+    if (!movie) {
+      throw new NotFoundException('Movie not found');
+    }
+
+    await this.movieRepository.delete(id);
+    return { id };
   }
 }

@@ -85,7 +85,9 @@ export class UpdateMovieDto extends PartialType(CreateMovieDto) {
   @IsString()
   @IsOptional()
   genre?: string;
+}
 
+export class TestDto {
   /**
    * 기본 Validator
    */
