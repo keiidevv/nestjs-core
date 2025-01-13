@@ -29,7 +29,7 @@ export class MovieService {
 
     const movie = this.movieRepository.create({
       title: createMovieDto.title,
-      genre: createMovieDto.genre,
+      genres: createMovieDto.genres,
       detail: {
         detail: createMovieDto.detail, // cascade 옵션으로 인해 자동 생성
       },

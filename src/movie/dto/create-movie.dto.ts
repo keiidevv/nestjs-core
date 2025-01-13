@@ -1,4 +1,5 @@
 import { IsString, IsNotEmpty } from 'class-validator';
+import { Genre } from 'src/genre/entity/genre.entity';
 
 export class CreateMovieDto {
   @IsString()
@@ -11,7 +12,7 @@ export class CreateMovieDto {
   @IsNotEmpty({
     message: 'genre is required',
   })
-  genre: string;
+  genres: Genre[];
 
   @IsString()
   @IsNotEmpty({
