@@ -85,6 +85,10 @@ export class UpdateMovieDto extends PartialType(CreateMovieDto) {
   @IsString()
   @IsOptional()
   genre?: string;
+
+  @IsString()
+  @IsOptional()
+  detail?: string;
 }
 
 export class TestDto {

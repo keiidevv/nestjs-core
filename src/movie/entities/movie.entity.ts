@@ -1,25 +1,15 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
+  JoinColumn,
+  OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
-  VersionColumn,
 } from 'typeorm';
-
-export class BaseEntity {
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-
-  @VersionColumn()
-  version: number;
-}
+import { BaseTable } from './base.entity';
+import { MovieDetail } from './movie-detail.entity';
 
 @Entity()
-export class Movie extends BaseEntity {
+export class Movie extends BaseTable {
   // 그대로 컬럼을 상속받아서 사용 가능
   @PrimaryGeneratedColumn()
   id: number;
@@ -29,4 +19,10 @@ export class Movie extends BaseEntity {
 
   @Column()
   genre: string;
+
+  @OneToOne(() => MovieDetail, (movieDetail) => movieDetail.id, {
+    cascade: true, // 연관관계 자동 생성 (함께 업데이트 가능)
+  })
+  @JoinColumn()
+  detail: MovieDetail;
 }

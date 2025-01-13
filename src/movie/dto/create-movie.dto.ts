@@ -12,4 +12,10 @@ export class CreateMovieDto {
     message: 'genre is required',
   })
   genre: string;
+
+  @IsString()
+  @IsNotEmpty({
+    message: 'detail is required',
+  })
+  detail: string;
 }
