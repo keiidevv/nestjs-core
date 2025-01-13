@@ -1,6 +1,7 @@
 import { PartialType } from '@nestjs/swagger';
 import { CreateMovieDto } from './create-movie.dto';
 import {
+  ArrayNotEmpty,
   Contains,
   Equals,
   IsAlphanumeric,
@@ -82,19 +83,24 @@ export class UpdateMovieDto extends PartialType(CreateMovieDto) {
   @IsOptional()
   title?: string;
 
-  @IsString()
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsNumber(
+    {},
+    {
+      each: true,
+    },
+  )
   @IsOptional()
-  genre?: string;
+  genreIds?: number[];
 
   @IsString()
   @IsOptional()
   detail?: string;
 
   @IsString()
-  @IsNotEmpty({
-    message: 'directorId is required',
-  })
-  directorId: string;
+  @IsOptional()
+  directorId?: string;
 }
 
 export class TestDto {

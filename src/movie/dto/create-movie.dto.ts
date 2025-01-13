@@ -1,5 +1,10 @@
-import { IsString, IsNotEmpty } from 'class-validator';
-import { Genre } from 'src/genre/entity/genre.entity';
+import {
+  IsString,
+  IsNotEmpty,
+  IsArray,
+  ArrayNotEmpty,
+  IsNumber,
+} from 'class-validator';
 
 export class CreateMovieDto {
   @IsString()
@@ -8,11 +13,17 @@ export class CreateMovieDto {
   })
   title: string;
 
-  @IsString()
-  @IsNotEmpty({
+  @IsArray()
+  @ArrayNotEmpty({
     message: 'genre is required',
   })
-  genres: Genre[];
+  @IsNumber(
+    {},
+    {
+      each: true, // 배열 요소마다 검증
+    },
+  )
+  genreIds: number[];
 
   @IsString()
   @IsNotEmpty({
