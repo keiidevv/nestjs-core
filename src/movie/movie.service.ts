@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
-import { Movie } from './entities/movie.entity';
+import { Movie } from './entity/movie.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like, Repository } from 'typeorm';
-import { MovieDetail } from './entities/movie-detail.entity';
+import { MovieDetail } from './entity/movie-detail.entity';
+import { Director } from 'src/director/entity/director.entity';
 
 @Injectable()
 export class MovieService {
@@ -13,15 +14,26 @@ export class MovieService {
     private readonly movieRepository: Repository<Movie>,
     @InjectRepository(MovieDetail)
     private readonly movieDetailRepository: Repository<MovieDetail>,
+    @InjectRepository(Director)
+    private readonly directorRepository: Repository<Director>,
   ) {}
 
-  create(createMovieDto: CreateMovieDto) {
+  async create(createMovieDto: CreateMovieDto) {
+    const director = await this.directorRepository.findOne({
+      where: { id: createMovieDto.directorId },
+    });
+
+    if (!director) {
+      throw new NotFoundException('Director not found');
+    }
+
     const movie = this.movieRepository.create({
       title: createMovieDto.title,
       genre: createMovieDto.genre,
       detail: {
         detail: createMovieDto.detail, // cascade 옵션으로 인해 자동 생성
       },
+      director: director, // cascade 옵션으로 인해 자동 생성
     });
 
     return this.movieRepository.save(movie);
@@ -34,13 +46,14 @@ export class MovieService {
 
     return this.movieRepository.findAndCount({
       where: { title: Like(`%${title}%`) },
+      relations: ['detail', 'director'],
     });
   }
 
   findOne(id: number) {
     return this.movieRepository.findOne({
       where: { id },
-      relations: ['detail'], // 연관관계 함께 조회
+      relations: ['detail', 'director'],
     });
   }
 
@@ -49,30 +62,42 @@ export class MovieService {
       where: { id },
       relations: ['detail'],
     });
+
     if (!movie) {
       throw new NotFoundException('Movie not found');
     }
 
-    const { detail, ...movieRest } = updateMovieDto;
+    const { detail, directorId, ...movieRest } = updateMovieDto;
+
+    let newDirector;
+
+    if (directorId) {
+      const director = await this.directorRepository.findOne({
+        where: { id: directorId },
+      });
+      if (!director) {
+        throw new NotFoundException('Director not found');
+      }
+      newDirector = director;
+    }
+
+    const movieUpdateFields = {
+      ...movieRest,
+      ...(newDirector ? { director: newDirector } : {}),
+    };
+
+    await this.movieRepository.update({ id }, movieUpdateFields);
 
     if (detail) {
       await this.movieDetailRepository.update(
-        {
-          id: movie.detail.id,
-        },
-        {
-          detail,
-        },
+        { id: movie.detail.id },
+        { detail },
       );
     }
 
-    await this.movieRepository.update(id, {
-      ...movieRest,
-    });
-
     return this.movieRepository.findOne({
       where: { id },
-      relations: ['detail'],
+      relations: ['detail', 'director'],
     });
   }
 

@@ -89,6 +89,12 @@ export class UpdateMovieDto extends PartialType(CreateMovieDto) {
   @IsString()
   @IsOptional()
   detail?: string;
+
+  @IsString()
+  @IsNotEmpty({
+    message: 'directorId is required',
+  })
+  directorId: string;
 }
 
 export class TestDto {

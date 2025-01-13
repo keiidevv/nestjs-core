@@ -18,4 +18,10 @@ export class CreateMovieDto {
     message: 'detail is required',
   })
   detail: string;
+
+  @IsString()
+  @IsNotEmpty({
+    message: 'directorId is required',
+  })
+  directorId: string;
 }
