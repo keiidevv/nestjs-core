@@ -42,6 +42,33 @@ export class MovieService {
       );
     }
 
+    /**
+     * query builder 를 사용하는 경우 (전반적인 jdsl 비슷)
+     *
+     * const movieDetail = await this.movieDetailRepository.createQueryBuilder('movieDetail')
+     * .insert()
+     * .into(MovieDetail)
+     * .values({
+     *  detail: createMovieDto.detail,
+     * })
+     * .execute();
+     *
+     * cosnt movieDetailId = movieDetail.raw[0].id;
+     *
+     * const movie = await this.movieRepository.createQueryBuilder('movie')
+     * .insert()
+     * .into(Movie)
+     * .values({
+     *  title: createMovieDto.title,
+     *  detail: { id: movieDetailId },
+     *  director: { id: directorId },
+     * })
+     * .execute(); // 다대다는 설정되지 않으므로 별도로 진행해줘야함
+     *
+     * await this.movieDetailRepository.update({ id: movieDetailId }, { movie: { id: movie.raw[0].id } });
+     * await this.genreRepository.update({ id: In(createMovieDto.genreIds) }, { movie: { id: movie.raw[0].id } });
+     */
+
     // movie 생성
     const movie = await this.movieRepository.save({
       title: createMovieDto.title,
@@ -55,15 +82,28 @@ export class MovieService {
     return movie;
   }
 
-  findAll(title?: string) {
-    if (!title) {
-      return this.movieRepository.find();
+  async findAll(title?: string) {
+    const qb = await this.movieRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.detail', 'detail')
+      .leftJoinAndSelect('movie.director', 'director')
+      .leftJoinAndSelect('movie.genres', 'genres');
+
+    if (title) {
+      // title이 존재할 때에만 조건 필터
+      qb.where('movie.title LIKE :title', { title: `%${title}%` });
     }
 
-    return this.movieRepository.findAndCount({
-      where: { title: Like(`%${title}%`) },
-      relations: ['detail', 'director'],
-    });
+    return qb.getManyAndCount();
+
+    // if (!title) {
+    //   return this.movieRepository.find();
+    // }
+
+    // return this.movieRepository.findAndCount({
+    //   where: { title: Like(`%${title}%`) },
+    //   relations: ['detail', 'director'],
+    // });
   }
 
   findOne(id: number) {
